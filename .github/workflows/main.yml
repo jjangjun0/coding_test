@@ -1,0 +1,95 @@
+name: Organize Coding Test Solutions
+
+on:
+  push:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  organize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Organize solutions
+        shell: bash
+        run: |
+          set -e
+
+          organize_platform() {
+            platform="$1"
+
+            if [ ! -d "$platform" ]; then
+              echo "$platform 폴더가 없어서 건너뜁니다."
+              return
+            fi
+
+            find "$platform" -type f \
+              \( -name "*.cc" \
+              -o -name "*.cpp" \
+              -o -name "*.cxx" \
+              -o -name "*.java" \) \
+              -print0 |
+            while IFS= read -r -d '' solution_file; do
+
+              extension="${solution_file##*.}"
+
+              case "$extension" in
+                cc|cpp|cxx)
+                  language="cpp"
+                  ;;
+                java)
+                  language="java"
+                  ;;
+                *)
+                  continue
+                  ;;
+              esac
+
+              relative_path="${solution_file#"$platform"/}"
+              level="${relative_path%%/*}"
+              remaining_path="${relative_path#*/}"
+              problem_directory="${remaining_path%/*}"
+
+              source_directory="$platform/$level/$problem_directory"
+              target_directory="$language/$platform/$level/$problem_directory"
+
+              echo "이동: $source_directory -> $target_directory"
+
+              mkdir -p "$target_directory"
+              cp -a "$source_directory"/. "$target_directory"/
+              rm -rf "$source_directory"
+            done
+          }
+
+          organize_platform "백준"
+          organize_platform "프로그래머스"
+
+          find "백준" -type d -empty -delete 2>/dev/null || true
+          find "프로그래머스" -type d -empty -delete 2>/dev/null || true
+
+      - name: Commit organized files
+        shell: bash
+        run: |
+          if git diff --quiet && git diff --cached --quiet; then
+            echo "변경된 파일이 없습니다."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email \
+            "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add -A
+          git commit -m "chore: organize solutions by language"
+          git push
