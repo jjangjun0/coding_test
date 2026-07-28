@@ -25,7 +25,6 @@ class Solution {
             is_exist = false;
             for (int i = 0; i < 4; i++) {
                 if (i != last_say && // 중복 X
-                        idx + joka[i].length() <= L && // substring 가능
                         S.startsWith(joka[i], idx)) {  // joka로 시작
                     is_exist = true;
                     idx += joka[i].length();
