@@ -11,12 +11,12 @@ class Solution {
                 character[find_idx(survey[i].charAt(1))] += (score - 4);
         }
         
-        String result = "";
-        result += (character[0] >= character[1] ? 'R' : 'T');
-        result += (character[2] >= character[3] ? 'C' : 'F');
-        result += (character[4] >= character[5] ? 'J' : 'M');
-        result += (character[6] >= character[7] ? 'A' : 'N');
-        return result;
+        StringBuilder sb = new StringBuilder();
+        sb.append(character[0] >= character[1] ? 'R' : 'T');
+        sb.append(character[2] >= character[3] ? 'C' : 'F');
+        sb.append(character[4] >= character[5] ? 'J' : 'M');
+        sb.append(character[6] >= character[7] ? 'A' : 'N');
+        return sb.toString();
     }
     int find_idx(char c) {
         int idx = 0;
